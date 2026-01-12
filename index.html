@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>共通テスト判定＆戦略アドバイザー v2.0</title>
-    <meta name="description" content="文系・理系別の科目入力に対応。共通テストの素点から偏差値を自動換算し、最適な入試方式（前期・後期・共テ利用）を推奨するツール。">
+    <title>共通テスト判定＆戦略アドバイザー v2.2</title>
+    <meta name="description" content="国語（現古漢）の分割入力に対応。素点から偏差値を自動換算し、最適な入試方式と科目別対策を提案するツール。">
     
     <!-- OGP Tags -->
-    <meta property="og:title" content="共テ判定＆戦略アドバイザー v2">
-    <meta property="og:description" content="文理別の入力フォームと入試方式レコメンド機能を搭載。">
+    <meta property="og:title" content="共テ判定＆戦略アドバイザー v2.2">
+    <meta property="og:description" content="現代文・古文・漢文を個別に分析可能。弱点を可視化して戦略を立てよう。">
     <meta property="og:type" content="website">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -43,26 +43,30 @@
             border-color: #3b82f6;
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
-        /* 入力フォーム切り替えアニメーション */
         .input-group {
             animation: fadeIn 0.3s ease-in-out;
+        }
+        .sub-input-group {
+            background-color: #f8fafc;
+            border-left: 3px solid #cbd5e1;
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(5px); }
             to { opacity: 1; transform: translateY(0); }
         }
+        .badge-method {
+            font-size: 0.7rem;
+            padding: 2px 6px;
+            border-radius: 4px;
+            background-color: #f1f5f9;
+            color: #475569;
+            border: 1px solid #e2e8f0;
+            margin-right: 6px;
+        }
         @media print {
-            header button, footer, .no-print {
-                display: none;
-            }
-            body {
-                background: white;
-            }
-            .card {
-                box-shadow: none;
-                border: 1px solid #eee;
-                break-inside: avoid;
-            }
+            header button, footer, .no-print { display: none; }
+            body { background: white; }
+            .card { box-shadow: none; border: 1px solid #eee; break-inside: avoid; }
         }
     </style>
 </head>
@@ -73,7 +77,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <i class="fa-solid fa-graduation-cap text-indigo-600 text-2xl"></i>
-                <h1 class="text-xl font-bold text-slate-800 tracking-tight">共テ判定・戦略アドバイザー <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full ml-1 align-middle">v2.0</span></h1>
+                <h1 class="text-xl font-bold text-slate-800 tracking-tight">共テ判定・戦略アドバイザー <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full ml-1 align-middle">v2.2</span></h1>
             </div>
             <div class="flex items-center space-x-4">
                 <button onclick="window.print()" class="text-slate-400 hover:text-indigo-600 transition text-xl" title="結果を印刷">
@@ -97,7 +101,6 @@
                     <div class="space-y-4">
                         <div>
                             <label class="block text-sm font-bold text-slate-700 mb-1">志望分野（文理選択）</label>
-                            <p class="text-xs text-slate-500 mb-2">選択に応じて入力科目が変化します</p>
                             <select id="fieldSelect" class="w-full bg-slate-50 border border-slate-200 rounded-lg p-3 text-sm focus:ring-2 focus:ring-indigo-500 transition" onchange="updateFormUI()">
                                 <optgroup label="理系">
                                     <option value="science" selected>理系（工・理・農）</option>
@@ -124,15 +127,20 @@
                         <h2 class="text-lg font-bold flex items-center text-slate-700">
                             <i class="fa-solid fa-pencil mr-2 text-indigo-500"></i>素点入力
                         </h2>
-                        <span id="subjectCountBadge" class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">理系型: 8科目</span>
+                        <span id="subjectCountBadge" class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded">--</span>
                     </div>
                     
-                    <div class="space-y-3" id="scoreInputs">
+                    <div class="space-y-1" id="scoreInputs">
                         <!-- Javascriptで動的に生成されます -->
                     </div>
 
+                    <div class="mt-4 p-3 bg-blue-50 text-blue-800 text-xs rounded border border-blue-100">
+                        <i class="fa-solid fa-circle-info mr-1"></i>
+                        国語は「現・古・漢」を個別に入力すると、自動で200点満点の総合判定にも使用されます。
+                    </div>
+
                     <button onclick="analyze()" class="w-full mt-6 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl shadow-lg shadow-indigo-200 transition active:scale-95 flex items-center justify-center group">
-                        <i class="fa-solid fa-wand-magic-sparkles mr-2 group-hover:rotate-12 transition"></i> 判定・推奨方式を表示
+                        <i class="fa-solid fa-wand-magic-sparkles mr-2 group-hover:rotate-12 transition"></i> 判定・分析開始
                     </button>
                 </div>
             </div>
@@ -169,12 +177,11 @@
                 <!-- Analysis Results -->
                 <div id="resultSection" class="space-y-6 opacity-50 pointer-events-none transition-opacity duration-500">
                     
-                    <!-- University Recommendations with Methods -->
+                    <!-- University Recommendations -->
                     <div class="card p-6 border-t-4 border-indigo-500">
                         <h3 class="font-bold text-lg mb-4 flex items-center text-slate-800">
                             <i class="fa-solid fa-bullseye mr-2 text-indigo-500"></i>大学別・推奨入試方式判定
                         </h3>
-                        <p class="text-sm text-slate-500 mb-4">あなたの得点特性に基づき、最も合格可能性が高い方式を提案します。</p>
                         <div class="space-y-4" id="uniRecommendations">
                             <div class="text-center text-slate-400 py-12 bg-slate-50 rounded-lg border border-dashed border-slate-200">
                                 左側のフォームに点数を入力して判定を開始してください
@@ -196,11 +203,12 @@
                         <!-- Chart -->
                         <div class="card p-6 border-t-4 border-amber-500 h-full flex flex-col">
                             <h3 class="font-bold text-lg mb-2 flex items-center text-slate-800">
-                                <i class="fa-solid fa-chart-radar mr-2 text-amber-500"></i>科目バランス
+                                <i class="fa-solid fa-chart-radar mr-2 text-amber-500"></i>科目バランス詳細
                             </h3>
-                            <div class="flex-1 flex items-center justify-center min-h-[200px]">
+                            <div class="flex-1 flex items-center justify-center min-h-[250px]">
                                 <canvas id="radarChart"></canvas>
                             </div>
+                            <p class="text-xs text-center text-slate-400 mt-2">国語は現・古・漢を個別に表示しています</p>
                         </div>
                     </div>
 
@@ -221,21 +229,27 @@
 
     <footer class="bg-slate-50 border-t border-slate-200 mt-12 py-8 no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500">
-            <p class="mb-2">本ツールはアップロードされた統計データに基づくシミュレーションです。実際の合否や入試区分の詳細は各大学の募集要項をご確認ください。</p>
-            <p>&copy; 2025 Common Test Strategy Advisor v2.0</p>
+            <p class="mb-2">本ツールのデータは2025年度入試（令和7年度）の主要大学の傾向に基づいています。国語の配点は現代文110点、古文45点、漢文45点として計算しています。</p>
+            <p>&copy; 2025 Common Test Strategy Advisor v2.2</p>
         </div>
     </footer>
 
     <script>
         // --- 1. Data Definitions ---
         
-        // 換算テーブル (アップロードされたPDFデータの傾向値を採用)
+        // 換算テーブル
         const conversionTables = {
             englishR:  { max: 100, points: [[100, 68.0], [80, 58.7], [60, 49.4], [40, 40.1], [20, 30.8], [0, 20.0]] },
             englishL:  { max: 100, points: [[100, 77.5], [80, 65.0], [60, 52.4], [40, 39.8], [20, 27.2], [0, 20.0]] },
             math1A:    { max: 100, points: [[100, 78.6], [80, 68.7], [60, 58.7], [40, 48.0], [20, 38.0], [0, 28.0]] },
             math2BC:   { max: 100, points: [[100, 68.5], [80, 59.4], [60, 50.3], [40, 41.1], [20, 32.0], [0, 22.0]] },
+            // 国語総合（判定用）
             japanese:  { max: 200, points: [[200, 79.9], [150, 63.2], [100, 46.6], [80, 39.9], [50, 29.9], [0, 20.0]] },
+            // 国語詳細（分析用） - 25-statistics-10-03.pdfに基づく
+            jp_modern: { max: 110, points: [[110, 74.6], [90, 62.7], [70, 50.8], [50, 38.9], [30, 27.0], [10, 15.1]] },
+            jp_ancient:{ max: 45, points: [[45, 72.0], [35, 62.3], [25, 52.6], [15, 42.9], [5, 30.0]] }, // データ補間含む
+            jp_kanbun: { max: 45, points: [[45, 71.0], [35, 62.8], [25, 54.7], [15, 46.6], [5, 38.0]] },
+
             science:   { max: 100, points: [[100, 72.0], [80, 64.0], [60, 56.0], [40, 48.0], [20, 40.0], [0, 30.0]] },
             social:    { max: 100, points: [[100, 73.8], [80, 62.9], [60, 52.1], [40, 41.2], [20, 30.0], [0, 20.0]] },
             info:      { max: 100, points: [[100, 81.2], [80, 67.2], [60, 53.2], [40, 39.2], [20, 25.2], [0, 15.0]] }
@@ -247,91 +261,97 @@
             englishL: { name: '英語(L)', max: 100, table: 'englishL' },
             math1A:   { name: '数学I・A', max: 100, table: 'math1A' },
             math2BC:  { name: '数学II・B・C', max: 100, table: 'math2BC' },
-            japanese: { name: '国語', max: 200, table: 'japanese' },
+            // 国語詳細
+            jp_modern: { name: '現代文', max: 110, table: 'jp_modern', isSub: true },
+            jp_ancient:{ name: '古文', max: 45, table: 'jp_ancient', isSub: true },
+            jp_kanbun: { name: '漢文', max: 45, table: 'jp_kanbun', isSub: true },
+
             info:     { name: '情報', max: 100, table: 'info' },
             // 理系用
-            science1: { name: '理科① (物理/化学等)', max: 100, table: 'science' },
-            science2: { name: '理科② (物理/化学等)', max: 100, table: 'science' },
-            social:   { name: '地歴公民 (1科目)', max: 100, table: 'social' },
+            science1: { name: '理科①', max: 100, table: 'science' },
+            science2: { name: '理科②', max: 100, table: 'science' },
+            social:   { name: '地歴公民', max: 100, table: 'social' },
             // 文系用
             social1:  { name: '地歴公民①', max: 100, table: 'social' },
             social2:  { name: '地歴公民②', max: 100, table: 'social' },
-            scienceBasic: { name: '理科基礎 (2科目分)', max: 100, table: 'science' }
+            scienceBasic: { name: '理科基礎', max: 100, table: 'science' }
         };
 
         // 大学・入試方式データベース
-        // exams: 方式ごとのボーダー偏差値と説明
         const universities = [
             { 
                 name: "北海道大学", faculty: "総合理系", field: ["science", "medical", "info_sci"], 
                 exams: [
-                    { type: "前期", border: 62.5, desc: "標準的な国公立型。総合力が問われる。" },
-                    { type: "後期", border: 66.0, desc: "募集人数が少なく高難易度。理科の配点が高い。" }
+                    { type: "前期", border: 62.5, desc: "標準的な5教科7科目。総合点での勝負。" },
+                    { type: "後期", border: 66.0, desc: "募集減で高倍率。理科の配点比率が高い。" }
                 ]
             },
             { 
                 name: "北海道大学", faculty: "総合文系", field: ["humanities", "social", "info_arts"], 
                 exams: [
-                    { type: "前期", border: 61.5, desc: "共通テストの配点比率が高い。ここでの貯金が鍵。" },
-                    { type: "後期", border: 65.0, desc: "小論文重視だが、共テのボーダーも跳ね上がる。" }
-                ]
-            },
-            { 
-                name: "東北大学", faculty: "工学部", field: ["science", "info_sci"], 
-                exams: [
-                    { type: "前期", border: 64.0, desc: "数学・理科の比重が大きい。" },
-                    { type: "AO入試", border: 60.0, desc: "共テの基準点さえ超えれば面接・書類勝負。" }
-                ]
-            },
-            { 
-                name: "明治大学", faculty: "理工学部", field: ["science", "info_sci"], 
-                exams: [
-                    { type: "一般", border: 58.0, desc: "3教科入試。数学の難易度が高い。" },
-                    { type: "共テ利用(3教科)", border: 63.0, desc: "国立併願組が多くボーダーは高騰する。" },
-                    { type: "共テ利用(4教科)", border: 60.0, desc: "科目数が増える分、少しボーダーが下がる穴場。" }
-                ]
-            },
-            { 
-                name: "明治大学", faculty: "政治経済学部", field: ["social", "info_arts"], 
-                exams: [
-                    { type: "一般", border: 62.0, desc: "私大文系の最難関。英語勝負。" },
-                    { type: "共テ利用(3教科)", border: 66.0, desc: "早慶併願レベルの得点率が必要。" },
-                    { type: "共テ利用(5科目)", border: 61.0, desc: "国公立志望者向け。多科目受験ならチャンスあり。" }
-                ]
-            },
-            { 
-                name: "北海学園大学", faculty: "工学部", field: ["science", "info_sci"], 
-                exams: [
-                    { type: "共テ利用I期", border: 45.0, desc: "道内私大の定番。まずはここで合格確保を。" },
-                    { type: "一般", border: 42.0, desc: "標準的な問題。基礎があれば解ける。" }
-                ]
-            },
-            { 
-                name: "北海学園大学", faculty: "経済学部", field: ["social", "info_arts"], 
-                exams: [
-                    { type: "共テ利用I期", border: 47.0, desc: "英語・国語＋1科目で判定。" },
-                    { type: "一般", border: 44.0, desc: "過去問対策がそのまま得点に直結する。" }
+                    { type: "前期", border: 61.5, desc: "共テ配点比率が高い。国語・英語での失点は避けたい。" },
+                    { type: "後期", border: 65.0, desc: "小論文重視だが、共テのボーダーも高い。" }
                 ]
             },
             { 
                 name: "小樽商科大学", faculty: "商学部", field: ["social", "info_arts"], 
                 exams: [
-                    { type: "前期", border: 53.0, desc: "英語の配点が高い。英語が得意なら有利。" },
-                    { type: "後期", border: 56.0, desc: "道内・道外から志願者が集まる。" }
+                    { type: "前期", border: 53.0, desc: "<span class='font-bold text-indigo-600'>英語重視</span>配点。英語が得意なら有利。" },
+                    { type: "後期", border: 56.0, desc: "道内・道外から志願者が集まる激戦区。" }
                 ]
             },
             { 
                 name: "室蘭工業大学", faculty: "理工学部", field: ["science", "info_sci"], 
                 exams: [
-                    { type: "前期", border: 46.0, desc: "数学・理科が得意なら逆転しやすい配点。" },
-                    { type: "後期", border: 50.0, desc: "前期で決めたい。" }
+                    { type: "前期", border: 46.0, desc: "数学・理科の傾斜配点あり。理数特化型におすすめ。" },
+                    { type: "後期", border: 50.0, desc: "前期で不合格だった場合の受け皿だがボーダーは高い。" }
+                ]
+            },
+            { 
+                name: "北海学園大学", faculty: "工学部", field: ["science", "info_sci"], 
+                exams: [
+                    { type: "共テ利用I期", border: 45.0, desc: "3教科3科目（英・数・理）。<span class='font-bold text-emerald-600'>ここを「港」として確保</span>推奨。" },
+                    { type: "一般入試", border: 42.0, desc: "英数理のスタンダードな試験。" }
+                ]
+            },
+            { 
+                name: "北海学園大学", faculty: "経済学部", field: ["social", "info_arts"], 
+                exams: [
+                    { type: "共テ利用I期", border: 47.0, desc: "3科目型（英・国・地歴公民or数）。科目を絞れる。" },
+                    { type: "一般入試", border: 44.0, desc: "2月上旬実施。過去問対策が有効。" }
+                ]
+            },
+            { 
+                name: "東北大学", faculty: "工学部", field: ["science", "info_sci"], 
+                exams: [
+                    { type: "前期", border: 64.0, desc: "数学・理科の比重が大きい。AO入試も要検討。" }
+                ]
+            },
+            { 
+                name: "明治大学", faculty: "理工学部", field: ["science", "info_sci"], 
+                exams: [
+                    { type: "共テ利用(4教科)", border: 63.0, desc: "理科1科目でOKな方式あり。" },
+                    { type: "共テ利用(3教科)", border: 65.0, desc: "科目数が少ない分、ボーダーは高い。" }
+                ]
+            },
+            { 
+                name: "東京理科大学", faculty: "工学部", field: ["science", "info_sci"], 
+                exams: [
+                    { type: "A方式(共テ利用)", border: 64.0, desc: "科目選択の自由度が高いが高得点が必要。" },
+                    { type: "B方式(独自)", border: 60.0, desc: "数学の難易度が高い実力勝負。" }
+                ]
+            },
+            { 
+                name: "法政大学", faculty: "デザイン工学部", field: ["science", "info_sci"], 
+                exams: [
+                    { type: "T日程(2科目)", border: 56.0, desc: "数学・英語の<span class='font-bold text-indigo-600'>2科目だけで受験可能</span>。" },
+                    { type: "共テ利用(3教科)", border: 60.0, desc: "数・理・英。ボーダーはMARCH標準。" }
                 ]
             }
         ];
 
         // --- 2. Logic Functions ---
 
-        // 現在のモード（文系/理系）に基づいて入力フォームを生成
         let currentSubjectKeys = [];
 
         function updateFormUI() {
@@ -341,23 +361,21 @@
             
             container.innerHTML = '';
             
-            // 文系・理系の科目構成定義
-            // 文系: 地歴公民2つ、理科基礎1つ (国立型想定)
-            // 理系: 理科2つ、地歴公民1つ
             let subjects = [];
             
-            // 共通科目
-            const common = ['englishR', 'englishL', 'math1A', 'math2BC', 'japanese', 'info'];
+            // 国語を分解したリスト
+            const japaneseSet = ['jp_modern', 'jp_ancient', 'jp_kanbun'];
+            const commonOthers = ['englishR', 'englishL', 'math1A', 'math2BC', 'info'];
 
             if (['humanities', 'social', 'info_arts'].includes(field)) {
-                // 文系パターン
-                subjects = [...common, 'social1', 'social2', 'scienceBasic'];
-                badge.innerText = "文系型: 5教科8科目相当";
+                // 文系: 英語, 数学, 国語(3), 地歴(2), 理科(1)
+                subjects = ['englishR', 'englishL', 'math1A', 'math2BC', ...japaneseSet, 'social1', 'social2', 'scienceBasic', 'info'];
+                badge.innerText = "文系型: 入力項目多数";
                 badge.className = "text-xs bg-orange-100 text-orange-800 px-2 py-1 rounded";
             } else {
-                // 理系パターン
-                subjects = [...common, 'science1', 'science2', 'social'];
-                badge.innerText = "理系型: 5教科7科目";
+                // 理系: 英語, 数学, 国語(3), 理科(2), 地歴(1)
+                subjects = ['englishR', 'englishL', 'math1A', 'math2BC', ...japaneseSet, 'science1', 'science2', 'social', 'info'];
+                badge.innerText = "理系型: 標準";
                 badge.className = "text-xs bg-indigo-100 text-indigo-800 px-2 py-1 rounded";
             }
 
@@ -367,10 +385,16 @@
             subjects.forEach((key, index) => {
                 const sub = subjectMaster[key];
                 const div = document.createElement('div');
-                div.className = "input-group flex items-center justify-between p-2 hover:bg-slate-50 rounded-lg border-b border-transparent hover:border-slate-100";
-                div.style.animationDelay = `${index * 0.03}s`;
+                const isSub = sub.isSub ? "sub-input-group" : "";
+                div.className = `input-group flex items-center justify-between p-2 rounded-lg border-b border-transparent hover:border-slate-100 ${isSub}`;
+                div.style.animationDelay = `${index * 0.02}s`;
+                
+                // サブ項目（現古漢など）の場合はインデントをつける
+                const indent = sub.isSub ? "pl-4" : "";
+                const labelStyle = sub.isSub ? "text-xs text-slate-600" : "text-sm font-medium text-slate-700";
+
                 div.innerHTML = `
-                    <label class="text-sm font-medium w-1/2 text-slate-700">${sub.name}</label>
+                    <label class="${labelStyle} w-1/2 ${indent}">${sub.name}</label>
                     <div class="flex items-center w-1/2 space-x-2">
                         <input type="number" id="score_${key}" max="${sub.max}" min="0" placeholder="-" 
                             class="score-input w-full bg-white border border-slate-300 rounded px-3 py-2 text-right font-mono text-slate-700"
@@ -412,35 +436,58 @@
             resultSection.style.opacity = "1";
             resultSection.style.pointerEvents = "auto";
 
-            // 計算
             let totalScore = 0;
             let totalDevSum = 0;
             let count = 0;
-            let subjectDevs = {}; // チャート用
             
-            // 科目ごとの偏差値を計算
+            // チャート用データ（個別の現古漢を含む）
+            let subjectDevs = {};
+            
+            // 国語の合算用
+            let jpScoreSum = 0;
+            let hasJp = false;
+
+            // 1. 各科目の処理
             currentSubjectKeys.forEach(key => {
                 const input = document.getElementById(`score_${key}`);
                 const score = input.value === "" ? 0 : parseInt(input.value);
                 const subConfig = subjectMaster[key];
                 
                 totalScore += score;
-                const dev = calculateDeviation(subConfig.table, score);
-                
-                totalDevSum += dev;
-                count++;
 
-                // チャート用データ（キーを日本語名に変換）
-                subjectDevs[subConfig.name] = dev;
+                // 国語3兄弟の場合、合算用に保存しつつ、個別偏差値も計算
+                if (['jp_modern', 'jp_ancient', 'jp_kanbun'].includes(key)) {
+                    jpScoreSum += score;
+                    hasJp = true;
+                    // 個別偏差値（チャート・アドバイス用）
+                    const dev = calculateDeviation(subConfig.table, score);
+                    subjectDevs[subConfig.name] = dev;
+                } else {
+                    // 通常科目
+                    const dev = calculateDeviation(subConfig.table, score);
+                    subjectDevs[subConfig.name] = dev;
+                    
+                    // 総合偏差値計算用
+                    totalDevSum += dev;
+                    count++;
+                }
             });
 
-            const avgDev = totalDevSum / count;
+            // 2. 国語の総合偏差値を計算して合算
+            if (hasJp) {
+                const jpDev = calculateDeviation('japanese', jpScoreSum);
+                totalDevSum += jpDev;
+                count++; // 国語総合を1科目としてカウント
+                // subjectDevs['国語総合'] = jpDev; // チャートには個別を表示したいので総合は入れない
+            }
+
+            const avgDev = count > 0 ? totalDevSum / count : 0;
 
             // 表示更新
             document.getElementById('totalScore').innerText = `素点合計: ${totalScore}`;
             document.getElementById('totalDev').innerText = avgDev.toFixed(1);
 
-            // 得意・苦手
+            // 得意・苦手 (詳細科目ベース)
             const sorted = Object.entries(subjectDevs).sort((a,b) => b[1] - a[1]);
             document.getElementById('dominantSubject').innerText = sorted[0][0];
             document.getElementById('weakSubject').innerText = sorted[sorted.length-1][0];
@@ -448,6 +495,7 @@
             // 判定 & チャート
             renderRecommendations(avgDev);
             renderRadarChart(subjectDevs);
+            renderStrategy(avgDev, sorted);
         }
 
         function renderRecommendations(userDev) {
@@ -459,13 +507,10 @@
             recContainer.innerHTML = "";
             haganContainer.innerHTML = "";
 
-            // フィルタリング
             let relevantUnis = universities.filter(u => u.field.includes(field));
             
-            // ターゲット指定があれば追加
             if(targetName) {
                 const customMatches = universities.filter(u => u.name.includes(targetName));
-                // 重複排除して追加
                 customMatches.forEach(cm => {
                     if (!relevantUnis.includes(cm)) relevantUnis.unshift(cm);
                 });
@@ -474,13 +519,11 @@
             let hasSafety = false;
 
             relevantUnis.forEach(uni => {
-                // 各大学の中で、最も推奨される方式（判定が良いもの）を探す
                 let bestExam = null;
                 let bestDiff = -999;
                 let bestJudgment = "";
                 let bestColor = "";
 
-                // その大学の全ての入試方式をチェック
                 uni.exams.forEach(exam => {
                     const diff = userDev - exam.border;
                     if (diff > bestDiff) {
@@ -493,7 +536,6 @@
                 if (bestDiff >= 5) {
                     bestJudgment = "A判定";
                     bestColor = "bg-emerald-100 text-emerald-800 border-emerald-200";
-                    // 安全校はヘイガン港へ
                     haganContainer.innerHTML += createUniCard(uni, bestExam, bestJudgment, bestColor, true);
                     hasSafety = true;
                 } else if (bestDiff >= 2) {
@@ -518,28 +560,32 @@
             if (!hasSafety) {
                 haganContainer.innerHTML = `<div class="text-sm text-rose-500 bg-rose-50 p-3 rounded border border-rose-100">
                     <i class="fa-solid fa-triangle-exclamation mr-1"></i>
-                    現在のスコアでは安全圏の大学がデータ内に見つかりません。志望ランクの見直しや、独自日程の私大併願を検討してください。
+                    安全圏の大学が見つかりません。独自日程の私大併願を検討してください。
                 </div>`;
             }
+        }
 
-            // 戦略テキスト生成
-            let strategyHTML = "";
-            const weakSubName = document.getElementById('weakSubject').innerText;
-            
-            if (userDev >= 60) {
-                strategyHTML += `<p><strong><span class="text-indigo-600">攻めの受験</span>が可能です。</strong> 全体的に高水準ですが、${weakSubName}での失点が上位校合格のボトルネックになり得ます。ここを「平均点」まで引き上げるだけで、A判定の大学がグッと増えるでしょう。</p>`;
-                strategyHTML += `<p class="mt-2 text-xs text-slate-500">※推奨方式に「共テ利用」が出ている場合、私大を共通テストだけで確保し、国立の2次対策に全リソースを集中するのが賢明です。</p>`;
-            } else {
-                strategyHTML += `<p><strong><span class="text-amber-600">守りと攻めのバランス</span>が必要です。</strong> ${weakSubName}は基礎問題（大問1,2）だけを確実に取り、得意科目でカバーする戦略を立てましょう。</p>`;
-                strategyHTML += `<p class="mt-2 text-xs text-slate-500">※E判定の大学でも、方式によってはD〜Cに近づくものがあるかもしれません。傾斜配点（特定科目の配点が高い方式）を要項で確認してください。</p>`;
+        function renderStrategy(userDev, sortedDevs) {
+            let html = "";
+            const weak = sortedDevs[sortedDevs.length-1];
+            const strong = sortedDevs[0];
+
+            html += `<p class="mb-2">あなたの武器は<strong class="text-indigo-600">${strong[0]} (偏差値${strong[1].toFixed(1)})</strong>です。これを維持しつつ、<strong class="text-rose-600">${weak[0]}</strong>の底上げを図りましょう。</p>`;
+
+            // 国語詳細アドバイス
+            const jpWeak = sortedDevs.find(d => ['現代文','古文','漢文'].includes(d[0]));
+            if (jpWeak && jpWeak[1] < 45) {
+                 html += `<div class="mt-2 p-2 bg-amber-50 rounded border border-amber-100 text-xs">
+                    <i class="fa-solid fa-lightbulb text-amber-500 mr-1"></i>
+                    <strong>国語戦略:</strong> 特に${jpWeak[0]}が苦戦しているようです。${jpWeak[0] === '漢文' ? '漢文は句形の暗記だけで短期間に伸びるコスパの良い科目です。まずは再読文字と否定形から復習しましょう。' : '古文単語と助動詞の接続を見直すだけで、大問の正答率が変わります。'}
+                 </div>`;
             }
-            document.getElementById('strategyContent').innerHTML = strategyHTML;
+
+            document.getElementById('strategyContent').innerHTML = html;
         }
 
         function createUniCard(uni, exam, judgment, colorClass, isHagan) {
-            // 推奨バッジ: 判定が良い方式を目立たせる
-            const recommendBadge = `<span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 border border-slate-200 px-1.5 py-0.5 rounded ml-2">推奨方式</span>`;
-            
+            const recommendBadge = `<span class="badge-method">推奨方式</span>`;
             return `
                 <div class="flex flex-col p-4 bg-white border border-slate-100 shadow-sm rounded-lg hover:shadow-md transition">
                     <div class="flex justify-between items-start mb-2">
@@ -550,7 +596,7 @@
                         <span class="px-2 py-1 rounded text-xs font-bold ${colorClass}">${judgment}</span>
                     </div>
                     <div class="mt-1 pt-2 border-t border-slate-50">
-                        <div class="flex items-center mb-1">
+                        <div class="flex items-center mb-1 flex-wrap">
                             <span class="font-bold text-indigo-600 text-sm mr-2">${exam.type}</span>
                             ${recommendBadge}
                         </div>
@@ -592,7 +638,7 @@
                                 color: '#64748b'
                             },
                             suggestedMin: 30,
-                            suggestedMax: 75,
+                            suggestedMax: 70,
                             ticks: { display: false }
                         }
                     },
@@ -602,7 +648,6 @@
             });
         }
 
-        // 初期化
         updateFormUI();
         
     </script>
