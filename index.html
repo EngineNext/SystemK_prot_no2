@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>共通テスト判定＆戦略アドバイザー v2.6</title>
-    <meta name="description" content="全科目の合否シミュレーター（満点キャップ付き）を搭載。傾斜配点・学習スケジュール対応。">
+    <title>共通テスト判定＆戦略アドバイザー v2.8</title>
+    <meta name="description" content="ライバル比較・ベンチマーク機能搭載。合格者平均モデルとの差分を可視化し、戦略的な対策を支援します。">
     
     <!-- OGP Tags -->
-    <meta property="og:title" content="共テ判定＆戦略アドバイザー v2.6">
-    <meta property="og:description" content="あと何点取れば合格？全科目のシミュレーションが可能になりました。">
+    <meta property="og:title" content="共テ判定＆戦略アドバイザー v2.8">
+    <meta property="og:description" content="ライバルとの点数差を一発表示。合格ラインとのギャップを埋める戦略ツール。">
     <meta property="og:type" content="website">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -125,7 +125,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <i class="fa-solid fa-graduation-cap text-indigo-600 text-2xl"></i>
-                <h1 class="text-xl font-bold text-slate-800 tracking-tight">共テ判定・戦略アドバイザー <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full ml-1 align-middle">v2.6 (Sim+)</span></h1>
+                <h1 class="text-xl font-bold text-slate-800 tracking-tight">共テ判定・戦略アドバイザー <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full ml-1 align-middle">v2.8 (Fix)</span></h1>
             </div>
             <div class="flex items-center space-x-4">
                 <button onclick="resetData()" class="text-xs text-slate-400 hover:text-red-500 transition no-print mr-2" title="保存データを削除">
@@ -248,12 +248,36 @@
                 <!-- Analysis Results -->
                 <div id="resultSection" class="space-y-6 opacity-50 pointer-events-none transition-opacity duration-500">
                     
+                    <!-- Rival Benchmark Section (New in v2.7) -->
+                    <div class="card p-6 border-t-4 border-cyan-500" id="rivalSection">
+                        <h3 class="font-bold text-lg mb-2 flex items-center text-slate-800">
+                            <i class="fa-solid fa-users-viewfinder mr-2 text-cyan-500"></i>対ライバル ベンチマーク
+                        </h3>
+                        <p class="text-xs text-slate-500 mb-4">
+                            現在の志望校（<span id="targetUniName" class="font-bold">---</span>）の合格ラインにいる「仮想ライバル」との比較です。<br>
+                            大学ごとの傾斜配点を考慮したライバルの得点傾向を表示しています。
+                        </p>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
+                            <!-- Chart -->
+                            <div class="md:col-span-5 h-64 flex items-center justify-center">
+                                <canvas id="radarChart"></canvas>
+                            </div>
+                            <!-- Comparison List -->
+                            <div class="md:col-span-7">
+                                <h4 class="text-sm font-bold text-slate-600 mb-2 border-b pb-1">科目別ギャップ分析</h4>
+                                <div id="rivalComparisonList" class="space-y-2 h-60 overflow-y-auto pr-2 text-sm">
+                                    <!-- JS Generated -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- University Recommendations -->
                     <div class="card p-6 border-t-4 border-indigo-500">
                         <h3 class="font-bold text-lg mb-1 flex items-center text-slate-800">
                             <i class="fa-solid fa-bullseye mr-2 text-indigo-500"></i>大学別・全入試方式判定
                         </h3>
-                        <p class="text-xs text-slate-500 mb-4">各大学のすべての入試方式について、傾斜配点を考慮した得点率と判定を表示します。</p>
                         <div class="space-y-4" id="uniRecommendations">
                             <div class="text-center text-slate-400 py-12 bg-slate-50 rounded-lg border border-dashed border-slate-200">
                                 左側のフォームに点数を入力して判定を開始してください
@@ -261,26 +285,14 @@
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Hagan Port -->
-                        <div class="card p-6 border-t-4 border-emerald-500 h-full">
-                            <h3 class="font-bold text-lg mb-4 flex items-center text-slate-800">
-                                <i class="fa-solid fa-anchor mr-2 text-emerald-500"></i>ヘイガン港（推奨併願校）
-                            </h3>
-                            <div class="space-y-3" id="haganPort">
-                                <div class="text-center text-slate-400 py-8">---</div>
-                            </div>
-                        </div>
-
-                        <!-- Chart -->
-                        <div class="card p-6 border-t-4 border-amber-500 h-full flex flex-col">
-                            <h3 class="font-bold text-lg mb-2 flex items-center text-slate-800">
-                                <i class="fa-solid fa-chart-radar mr-2 text-amber-500"></i>科目バランス詳細
-                            </h3>
-                            <div class="flex-1 flex items-center justify-center min-h-[250px]">
-                                <canvas id="radarChart"></canvas>
-                            </div>
-                            <p class="text-xs text-center text-slate-400 mt-2">国語は現・古・漢を個別に表示しています</p>
+                    <!-- Hagan Port (Restored Fix) -->
+                    <div class="card p-6 border-t-4 border-emerald-500">
+                        <h3 class="font-bold text-lg mb-4 flex items-center text-slate-800">
+                            <i class="fa-solid fa-anchor mr-2 text-emerald-500"></i>ヘイガン港（推奨併願校）
+                        </h3>
+                        <p class="text-xs text-slate-500 mb-3">安全圏（A判定）として確保すべき「港」となる大学群です。</p>
+                        <div class="space-y-3" id="haganPort">
+                            <div class="text-center text-slate-400 py-8">---</div>
                         </div>
                     </div>
 
@@ -301,8 +313,8 @@
 
     <footer class="bg-slate-50 border-t border-slate-200 mt-12 py-8 no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500">
-            <p class="mb-2">本ツールの判定は傾斜配点を考慮した独自のシミュレーション値です。実際の合否を保証するものではありません。</p>
-            <p>&copy; 2025 Common Test Strategy Advisor v2.6 (Sim+)</p>
+            <p class="mb-2">※「ライバル」のスコアは、各大学の入試傾向（傾斜配点）と合格ボーダーラインから逆算して生成された推計モデルです。</p>
+            <p>&copy; 2025 Common Test Strategy Advisor v2.8 (Fix)</p>
         </div>
     </footer>
 
@@ -347,7 +359,7 @@
                     { 
                         type: "前期", 
                         borderScoreRate: 0.76, 
-                        desc: "標準的だが理系科目の配点がやや重い傾斜あり。",
+                        desc: "標準的な5教科7科目。理系科目の配点がやや重い傾斜あり。",
                         weights: { englishR:1, englishL:1, math1A:1.2, math2BC:1.2, science1:1.2, science2:1.2, social:1, info:1, jp_modern:1, jp_ancient:1, jp_kanbun:1 }
                     },
                     { 
@@ -451,7 +463,7 @@
         // --- 2. Logic Functions ---
 
         let currentSubjectKeys = [];
-        let simulationOffsets = {}; // 全科目対応のために初期化ロジック変更
+        let simulationOffsets = {}; 
 
         function init() {
             loadData();
@@ -487,7 +499,7 @@
 
             currentSubjectKeys = subjects;
 
-            // Offsets初期化（まだ存在しないキーがあれば0埋め）
+            // Offsets初期化
             currentSubjectKeys.forEach(key => {
                 if (simulationOffsets[key] === undefined) simulationOffsets[key] = 0;
             });
@@ -520,7 +532,6 @@
                 }
             });
 
-            // Re-render Simulator when form changes
             renderSimulatorPanel();
         }
 
@@ -561,19 +572,16 @@
                     val += simulationOffsets[key];
                 }
                 
-                // Cap at max score
                 val = Math.min(val, max);
                 scores[key] = val;
             });
             return scores;
         }
 
-        // v2.6 Update: Dynamic Simulator Generation
         function renderSimulatorPanel() {
             const container = document.getElementById('simulatorGrid');
             container.innerHTML = '';
             
-            // Get current base scores
             const baseScores = getScoresFromUI(false);
 
             currentSubjectKeys.forEach(key => {
@@ -585,8 +593,6 @@
                 const displayClass = isMax ? 'text-rose-600 font-bold' : 'text-purple-600 font-bold';
                 const maxLabel = isMax ? '<span class="text-[10px] bg-rose-100 text-rose-600 px-1 rounded ml-1">MAX</span>' : '';
 
-                // スライダー生成
-                // 最大値は40点固定とするが、表示上は満点で止まるようにする
                 const div = document.createElement('div');
                 div.innerHTML = `
                     <div class="flex justify-between text-sm mb-1">
@@ -601,13 +607,45 @@
             });
         }
 
+        // v2.7: Rival Score Generator
+        function generateRivalScores(exam) {
+            let rivalScores = {};
+            let rivalDevs = {};
+            
+            // 1. 各科目の基準得点率を大学のボーダー得点率に設定
+            const baseRate = exam.borderScoreRate;
+
+            currentSubjectKeys.forEach(key => {
+                const sub = subjectMaster[key];
+                let weight = 1.0;
+                
+                // 2. 傾斜配点で重み付けされている科目は、ライバルも得意とする（得点率を上げる）
+                if (exam.weights && exam.weights[key] !== undefined) {
+                    if (exam.weights[key] > 1.0) weight = 1.1; // 重要科目は基準より1.1倍とれる想定
+                    if (exam.weights[key] < 1.0) weight = 0.9; // 軽視科目は0.9倍
+                } else if (exam.weights && !Object.keys(exam.weights).includes(key)) {
+                    // 入試に使わない科目は低めに設定（ただしチャートには出るので極端には下げない）
+                    weight = 0.8;
+                }
+
+                // 計算: 満点 * ボーダー率 * 重み係数
+                let score = sub.max * baseRate * weight;
+                score = Math.min(score, sub.max); // 満点キャップ
+                score = Math.floor(score); // 整数化
+
+                rivalScores[key] = score;
+                rivalDevs[sub.name] = calculateDeviation(sub.table, score);
+            });
+
+            return { scores: rivalScores, devs: rivalDevs };
+        }
+
         function runAnalysis(isSim = false) {
             const resultSection = document.getElementById('resultSection');
             resultSection.style.opacity = "1";
             resultSection.style.pointerEvents = "auto";
             if(!isSim) {
                 document.getElementById('simulatorPanel').classList.remove('hidden');
-                // ベーススコアが変わった可能性があるのでシミュレーターを再描画（リセットはしない）
                 renderSimulatorPanel(); 
             }
 
@@ -646,8 +684,19 @@
             document.getElementById('dominantSubject').innerText = sortedDevs[0][0];
             document.getElementById('weakSubject').innerText = sortedDevs[sortedDevs.length-1][0];
 
-            renderRecommendations(scores, avgDev);
-            renderRadarChart(subjectDevs);
+            // 大学判定を実行し、最も推奨される（またはターゲットの）大学情報を取得
+            const bestUniData = renderRecommendations(scores, avgDev);
+            
+            // v2.7: ライバル比較表示
+            if(bestUniData) {
+                const rivalData = generateRivalScores(bestUniData.exam);
+                document.getElementById('targetUniName').innerText = bestUniData.uni.name + " (" + bestUniData.exam.type + ")";
+                renderRadarChart(subjectDevs, rivalData.devs);
+                renderRivalComparison(scores, rivalData.scores);
+            } else {
+                renderRadarChart(subjectDevs, null);
+            }
+
             if (!isSim) renderStrategy(avgDev, sortedDevs);
         }
 
@@ -677,14 +726,18 @@
             haganContainer.innerHTML = "";
 
             let relevantUnis = universities.filter(u => u.field.includes(field));
+            let targetUniObj = null;
+
             if(targetName) {
                 const customMatches = universities.filter(u => u.name.includes(targetName));
                 customMatches.forEach(cm => {
                     if (!relevantUnis.includes(cm)) relevantUnis.unshift(cm);
+                    if (!targetUniObj) targetUniObj = cm; // ターゲット指定があればそれを優先
                 });
             }
 
             let hasSafety = false;
+            let topRecommendation = null;
 
             relevantUnis.forEach(uni => {
                 const examResults = uni.exams.map(exam => {
@@ -704,6 +757,13 @@
                 examResults.sort((a,b) => b.sortOrder - a.sortOrder);
                 const bestResult = examResults[0];
 
+                // ベストな推奨校を保存 (ターゲット指定がなければスコア順)
+                if (!topRecommendation || bestResult.sortOrder > topRecommendation.sortOrder) {
+                    if (!targetUniObj) { // ターゲット指定がない場合のみ更新
+                        topRecommendation = { uni: uni, exam: bestResult.exam };
+                    }
+                }
+
                 recContainer.innerHTML += createUniCardWithList(uni, examResults);
 
                 if (bestResult.sortOrder >= 5) { // A判定
@@ -718,6 +778,48 @@
                     安全圏の大学が見つかりません。独自日程の私大併願を検討してください。
                 </div>`;
             }
+
+            // ライバル比較の対象を返す
+            if (targetUniObj) {
+                // ターゲット大学の中で最も判定が良い（または標準的な）方式を返す
+                // 簡易的に0番目を返す
+                return { uni: targetUniObj, exam: targetUniObj.exams[0] };
+            } else {
+                return topRecommendation;
+            }
+        }
+
+        // v2.7: Rival Comparison List
+        function renderRivalComparison(userScores, rivalScores) {
+            const container = document.getElementById('rivalComparisonList');
+            container.innerHTML = "";
+
+            currentSubjectKeys.forEach(key => {
+                const sub = subjectMaster[key];
+                const myScore = userScores[key] || 0;
+                const rivScore = rivalScores[key] || 0;
+                const diff = myScore - rivScore;
+                
+                let diffHtml = "";
+                if (diff > 0) {
+                    diffHtml = `<span class="text-emerald-600 font-bold">+${diff}点</span> <span class="text-xs text-slate-400">リード</span>`;
+                } else if (diff < 0) {
+                    diffHtml = `<span class="text-rose-500 font-bold">${diff}点</span> <span class="text-xs text-slate-400">ビハインド</span>`;
+                } else {
+                    diffHtml = `<span class="text-slate-400">±0点</span>`;
+                }
+
+                const div = document.createElement('div');
+                div.className = "flex justify-between items-center p-2 border-b border-slate-50 last:border-0 hover:bg-slate-50";
+                div.innerHTML = `
+                    <div class="text-xs font-medium text-slate-700 w-1/3">${sub.name}</div>
+                    <div class="text-xs text-center w-1/3">
+                        <span class="font-mono">${myScore}</span> <span class="text-slate-300">/</span> <span class="font-mono text-slate-500">${rivScore}</span>
+                    </div>
+                    <div class="text-xs text-right w-1/3">${diffHtml}</div>
+                `;
+                container.appendChild(div);
+            });
         }
 
         function createUniCardWithList(uni, results) {
@@ -829,10 +931,36 @@
         }
 
         let chartInstance = null;
-        function renderRadarChart(dataObj) {
+        function renderRadarChart(myDataObj, rivalDataObj) {
             const ctx = document.getElementById('radarChart').getContext('2d');
-            const labels = Object.keys(dataObj);
-            const data = Object.values(dataObj);
+            const labels = Object.keys(myDataObj);
+            const myData = Object.values(myDataObj);
+            
+            // ライバルデータがある場合は整形、なければ空
+            let datasets = [{
+                label: 'あなた',
+                data: myData,
+                backgroundColor: 'rgba(99, 102, 241, 0.2)',
+                borderColor: '#6366f1',
+                pointBackgroundColor: '#6366f1',
+                pointBorderColor: '#fff',
+                borderWidth: 2,
+            }];
+
+            if (rivalDataObj) {
+                // ラベル順序に合わせてデータを並べ替え
+                const rivalData = labels.map(label => rivalDataObj[label] || 50); // Default 50 if missing
+                datasets.push({
+                    label: 'ライバル(仮想)',
+                    data: rivalData,
+                    backgroundColor: 'rgba(203, 213, 225, 0.1)', // 薄いグレー
+                    borderColor: '#94a3b8',
+                    borderDash: [5, 5],
+                    pointBackgroundColor: '#cbd5e1',
+                    pointBorderColor: '#fff',
+                    borderWidth: 2,
+                });
+            }
 
             if (chartInstance) chartInstance.destroy();
 
@@ -840,15 +968,7 @@
                 type: 'radar',
                 data: {
                     labels: labels,
-                    datasets: [{
-                        label: '偏差値',
-                        data: data,
-                        backgroundColor: 'rgba(99, 102, 241, 0.2)',
-                        borderColor: '#6366f1',
-                        pointBackgroundColor: '#6366f1',
-                        pointBorderColor: '#fff',
-                        borderWidth: 2,
-                    }]
+                    datasets: datasets
                 },
                 options: {
                     scales: {
@@ -864,7 +984,7 @@
                             ticks: { display: false }
                         }
                     },
-                    plugins: { legend: { display: false } },
+                    plugins: { legend: { display: true, position: 'bottom' } },
                     maintainAspectRatio: false
                 }
             });
@@ -872,11 +992,9 @@
 
         // --- Simulator & Storage Functions ---
 
-        // v2.6 Update: UI update logic with capping display
         function updateSimVal(key, val) {
             simulationOffsets[key] = parseInt(val);
             
-            // UI上のテキストを更新 (現在点 + ブースト が満点を超えていたらMAX表示)
             const currentScore = parseInt(document.getElementById(`score_${key}`).value) || 0;
             const sub = subjectMaster[key];
             const total = currentScore + parseInt(val);
@@ -892,7 +1010,6 @@
             }
         }
         
-        // v2.6: Reset function for simulation only
         function resetSimulation() {
             Object.keys(simulationOffsets).forEach(key => {
                 simulationOffsets[key] = 0;
