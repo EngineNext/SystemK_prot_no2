@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>共通テスト判定＆戦略アドバイザー v2.2</title>
-    <meta name="description" content="国語（現古漢）の分割入力に対応。素点から偏差値を自動換算し、最適な入試方式と科目別対策を提案するツール。">
+    <title>共通テスト判定＆戦略アドバイザー v2.3</title>
+    <meta name="description" content="学習スケジュール生成機能を追加。素点から偏差値を自動換算し、合格に向けた具体的なロードマップを提案するツール。">
     
     <!-- OGP Tags -->
-    <meta property="og:title" content="共テ判定＆戦略アドバイザー v2.2">
-    <meta property="og:description" content="現代文・古文・漢文を個別に分析可能。弱点を可視化して戦略を立てよう。">
+    <meta property="og:title" content="共テ判定＆戦略アドバイザー v2.3">
+    <meta property="og:description" content="弱点克服のための学習スケジュールを自動生成。合格への道筋を可視化します。">
     <meta property="og:type" content="website">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -63,6 +63,31 @@
             border: 1px solid #e2e8f0;
             margin-right: 6px;
         }
+        /* Timeline Styles */
+        .timeline {
+            position: relative;
+            padding-left: 1.5rem;
+            border-left: 2px solid #e2e8f0;
+            margin-top: 1.5rem;
+            margin-bottom: 1rem;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 1.5rem;
+        }
+        .timeline-item:last-child {
+            margin-bottom: 0;
+        }
+        .timeline-marker {
+            position: absolute;
+            left: -1.95rem;
+            top: 0.25rem;
+            width: 0.9rem;
+            height: 0.9rem;
+            border-radius: 50%;
+            background: white;
+            border: 3px solid #6366f1;
+        }
         @media print {
             header button, footer, .no-print { display: none; }
             body { background: white; }
@@ -77,7 +102,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
             <div class="flex items-center space-x-3">
                 <i class="fa-solid fa-graduation-cap text-indigo-600 text-2xl"></i>
-                <h1 class="text-xl font-bold text-slate-800 tracking-tight">共テ判定・戦略アドバイザー <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full ml-1 align-middle">v2.2</span></h1>
+                <h1 class="text-xl font-bold text-slate-800 tracking-tight">共テ判定・戦略アドバイザー <span class="text-xs bg-indigo-100 text-indigo-800 px-2 py-0.5 rounded-full ml-1 align-middle">v2.3</span></h1>
             </div>
             <div class="flex items-center space-x-4">
                 <button onclick="window.print()" class="text-slate-400 hover:text-indigo-600 transition text-xl" title="結果を印刷">
@@ -212,12 +237,12 @@
                         </div>
                     </div>
 
-                    <!-- Strategy Text -->
+                    <!-- Strategy Text & Schedule -->
                     <div class="card p-6 bg-gradient-to-r from-indigo-50 to-white border border-indigo-100">
-                        <h3 class="font-bold text-lg mb-3 flex items-center text-indigo-800">
-                            <i class="fa-solid fa-clipboard-check mr-2"></i>戦略アドバイス
+                        <h3 class="font-bold text-lg mb-1 flex items-center text-indigo-800">
+                            <i class="fa-solid fa-clipboard-check mr-2"></i>合格への戦略ロードマップ
                         </h3>
-                        <div id="strategyContent" class="text-sm leading-relaxed text-slate-700 space-y-2">
+                        <div id="strategyContent" class="text-sm leading-relaxed text-slate-700">
                             ---
                         </div>
                     </div>
@@ -230,7 +255,7 @@
     <footer class="bg-slate-50 border-t border-slate-200 mt-12 py-8 no-print">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-xs text-slate-500">
             <p class="mb-2">本ツールのデータは2025年度入試（令和7年度）の主要大学の傾向に基づいています。国語の配点は現代文110点、古文45点、漢文45点として計算しています。</p>
-            <p>&copy; 2025 Common Test Strategy Advisor v2.2</p>
+            <p>&copy; 2025 Common Test Strategy Advisor v2.3</p>
         </div>
     </footer>
 
@@ -569,17 +594,64 @@
             let html = "";
             const weak = sortedDevs[sortedDevs.length-1];
             const strong = sortedDevs[0];
+            const weakName = weak[0];
+            const weakDev = weak[1];
 
-            html += `<p class="mb-2">あなたの武器は<strong class="text-indigo-600">${strong[0]} (偏差値${strong[1].toFixed(1)})</strong>です。これを維持しつつ、<strong class="text-rose-600">${weak[0]}</strong>の底上げを図りましょう。</p>`;
+            // 1. General Comment
+            html += `<div class="mb-4">あなたの武器は<strong class="text-indigo-600">${strong[0]} (偏差値${strong[1].toFixed(1)})</strong>です。これを維持しつつ、<strong class="text-rose-600">${weakName}</strong>の底上げを図ることで総合偏差値を大きく伸ばせます。</div>`;
 
-            // 国語詳細アドバイス
-            const jpWeak = sortedDevs.find(d => ['現代文','古文','漢文'].includes(d[0]));
-            if (jpWeak && jpWeak[1] < 45) {
-                 html += `<div class="mt-2 p-2 bg-amber-50 rounded border border-amber-100 text-xs">
-                    <i class="fa-solid fa-lightbulb text-amber-500 mr-1"></i>
-                    <strong>国語戦略:</strong> 特に${jpWeak[0]}が苦戦しているようです。${jpWeak[0] === '漢文' ? '漢文は句形の暗記だけで短期間に伸びるコスパの良い科目です。まずは再読文字と否定形から復習しましょう。' : '古文単語と助動詞の接続を見直すだけで、大問の正答率が変わります。'}
-                 </div>`;
+            // 2. Schedule Logic
+            let phase1Title = "直近2週間：基礎徹底";
+            let phase1Content = "";
+            let phase2Title = "来月：実戦演習";
+            let phase2Content = "";
+            let phase3Title = "直前期：時間配分";
+            let phase3Content = "";
+
+            // Determine Strategy Type
+            if (userDev < 45) {
+                // 基礎救済パターン
+                phase1Content = `${weakName}の教科書・基本例題に戻りましょう。応用問題には手を付けず、公式や用語の定義を完璧に言えるようにしてください。`;
+                phase2Content = `「大問1・2」など、基礎点の配点が高い分野だけをマーク模試の過去問で繰り返し解きます。難問は捨ててOK。`;
+                phase3Content = `全科目の基礎問題だけで6割取る練習をします。得意の${strong[0]}だけは8割を狙いましょう。`;
+            } else if (userDev < 60) {
+                // 標準パターン
+                phase1Content = `${weakName}の苦手分野（例：ベクトルの計算、古文単語）を特定し、その単元だけを薄い問題集で集中特訓します。`;
+                phase2Content = `共通テスト形式の問題集（緑本や黒本）で、時間を計って解きます。間違えた問題の「解説」を熟読し、なぜ間違えたかを言語化します。`;
+                phase3Content = `本番と同じ時間割で予想問題を解きます。${strong[0]}で時間を稼ぎ、${weakName}に回す戦略を立てましょう。`;
+            } else {
+                // 上位層パターン
+                phase1Title = "直近2週間：穴埋めと速度";
+                phase1Content = `${weakName}でも偏差値60を切る単元がないかチェック。${strong[0]}は満点を狙うため、ケアレスミス防止のチェックリストを作成します。`;
+                phase2Title = "来月：難問攻略";
+                phase2Content = `Z会の予想問題など、少し難易度の高いセットで負荷をかけます。8割ではなく9割安定を目指すための「捨て問の見極め」を練習します。`;
+                phase3Content = `体調管理を最優先しつつ、毎日全科目に触れて感覚を鈍らせないようにします。`;
             }
+
+            // 国語特化アドバイス追加
+            if (['現代文','古文','漢文'].includes(weakName) && weakDev < 45) {
+                 phase1Content += `<br><span class="text-amber-600 text-xs mt-1 block"><i class="fa-solid fa-triangle-exclamation"></i> ${weakName}は単語・句形・キーワードの暗記不足の可能性大です。毎日15分、必ず音読を取り入れてください。</span>`;
+            }
+
+            // 3. Generate Timeline HTML
+            html += `
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="font-bold text-slate-700 text-sm mb-1">${phase1Title}</div>
+                    <p class="text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-100">${phase1Content}</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="font-bold text-slate-700 text-sm mb-1">${phase2Title}</div>
+                    <p class="text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-100">${phase2Content}</p>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-marker"></div>
+                    <div class="font-bold text-slate-700 text-sm mb-1">${phase3Title}</div>
+                    <p class="text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-100">${phase3Content}</p>
+                </div>
+            </div>`;
 
             document.getElementById('strategyContent').innerHTML = html;
         }
